@@ -53,6 +53,7 @@ class EventoDomView:
         categoria: str,
         com_quantitativo: bool = False,
         com_grupo_servos: bool = False,
+        com_visita_lar: bool = False,
     ):
         self.page = page
         self.state = state
@@ -61,9 +62,15 @@ class EventoDomView:
         self.categoria = categoria
         self.com_quantitativo = com_quantitativo
         self.com_grupo_servos = com_grupo_servos
+        self.com_visita_lar = com_visita_lar
 
         # ---------- Seção: novo Dom + classificação ----------
         self.igreja = ft.Dropdown(label="Igreja *", expand=True)
+        self.visita_lar_de = (
+            ft.TextField(label="Visita no lar de:", expand=True)
+            if com_visita_lar
+            else None
+        )
         self.visao = ft.Checkbox(label="Visão")
         self.revelacao = ft.Checkbox(label="Revelação")
         self.sonho = ft.Checkbox(label="Sonho")
@@ -80,8 +87,13 @@ class EventoDomView:
             else None
         )
 
-        controles_dom = [
-            self.igreja,
+        controles_dom = [self.igreja]
+        if self.visita_lar_de is not None:
+            controles_dom.append(
+                ft.Text("Visita no lar de:", weight=ft.FontWeight.BOLD)
+            )
+            controles_dom.append(self.visita_lar_de)
+        controles_dom += [
             ft.Text("Classificar o Dom como:", weight=ft.FontWeight.BOLD),
             ft.Row([self.visao, self.revelacao, self.sonho], wrap=True),
             self.dom,
@@ -216,6 +228,8 @@ class EventoDomView:
         }
         if self.com_grupo_servos:
             dados["grupo_servos"] = self.grupo_servos.value or ""
+        if self.visita_lar_de is not None:
+            dados["visita_lar_de"] = self.visita_lar_de.value.strip()
         inserir("eventos_dom", dados)
         self.dom.value = ""
         self.visao.value = False
@@ -224,6 +238,8 @@ class EventoDomView:
         self.entregue_por.value = ""
         if self.grupo_servos is not None:
             self.grupo_servos.value = None
+        if self.visita_lar_de is not None:
+            self.visita_lar_de.value = ""
         self._recarregar()
         self.snack("Dom adicionado!")
 
@@ -248,6 +264,12 @@ class EventoDomView:
             dados["grupo_servos"] = (
                 campos["grupo_servos"].value if campos.get("grupo_servos") else ""
             )
+        if self.visita_lar_de is not None:
+            dados["visita_lar_de"] = (
+                campos["visita_lar_de"].value.strip()
+                if campos.get("visita_lar_de")
+                else ""
+            )
         atualizar("eventos_dom", item_id, dados)
         self._recarregar()
         self.snack("Dom atualizado!")
@@ -264,13 +286,17 @@ class EventoDomView:
         if not self.igreja_quant.value:
             self.snack("Selecione a Igreja!")
             return
+        valores = {
+            campo: _numero(self.campos_quantitativo[campo].value)
+            for campo in _CAMPOS_QUANTITATIVO
+        }
+        if not any(valores.values()):
+            self.snack("Informe ao menos um valor no Quantitativo!")
+            return
         dados = {
             "categoria": self.categoria,
             "igreja_id": int(self.igreja_quant.value),
-            **{
-                campo: _numero(self.campos_quantitativo[campo].value)
-                for campo in _CAMPOS_QUANTITATIVO
-            },
+            **valores,
         }
         inserir("eventos_quantitativo", dados)
         for campo in self.campos_quantitativo.values():
@@ -283,13 +309,17 @@ class EventoDomView:
         if not campos["igreja"].value:
             self.snack("Selecione a Igreja!")
             return
+        valores = {
+            campo: _numero(campos["quantitativo"][campo].value)
+            for campo in _CAMPOS_QUANTITATIVO
+        }
+        if not any(valores.values()):
+            self.snack("Informe ao menos um valor no Quantitativo!")
+            return
         dados = {
             "categoria": self.categoria,
             "igreja_id": int(campos["igreja"].value),
-            **{
-                campo: _numero(campos["quantitativo"][campo].value)
-                for campo in _CAMPOS_QUANTITATIVO
-            },
+            **valores,
         }
         atualizar("eventos_quantitativo", item_id, dados)
         self._recarregar()
@@ -308,11 +338,13 @@ class EventoDomView:
     # PDF
     # ========================================================
     def _colunas_dom(self) -> list[tuple[str, str, float]]:
-        colunas = [
-            ("Igreja", "igreja_nome", 40),
-            ("Dom", "dom", 65),
-            ("Classificação", "_classificacao", 35),
-            ("Entregue Por", "entregue_por", 35),
+        colunas = [("Igreja", "igreja_nome", 40)]
+        if self.com_visita_lar:
+            colunas.append(("Visita no lar de", "visita_lar_de", 35))
+        colunas += [
+            ("Dom", "dom", 55 if self.com_visita_lar else 65),
+            ("Classificação", "_classificacao", 30 if self.com_visita_lar else 35),
+            ("Entregue Por", "entregue_por", 30 if self.com_visita_lar else 35),
         ]
         if self.com_grupo_servos:
             colunas.append(("Grupo de Servos", "grupo_servos", 30))
@@ -410,6 +442,15 @@ class EventoDomView:
             ],
             value=str(item["igreja_id"]) if item.get("igreja_id") else None,
         )
+        campo_visita_lar_de = (
+            ft.TextField(
+                value=item.get("visita_lar_de", ""),
+                label="Visita no lar de:",
+                expand=True,
+            )
+            if self.com_visita_lar
+            else None
+        )
         campo_dom = ft.TextField(
             value=item.get("dom", ""),
             label="Dom",
@@ -437,9 +478,16 @@ class EventoDomView:
             "sonho": campo_sonho,
             "entregue_por": campo_entregue_por,
         }
+        if campo_visita_lar_de is not None:
+            campos["visita_lar_de"] = campo_visita_lar_de
 
-        controles_item = [
-            campo_igreja,
+        controles_item = [campo_igreja]
+        if campo_visita_lar_de is not None:
+            controles_item.append(
+                ft.Text("Visita no lar de:", weight=ft.FontWeight.BOLD)
+            )
+            controles_item.append(campo_visita_lar_de)
+        controles_item += [
             ft.Text("Classificar o Dom como:", weight=ft.FontWeight.BOLD),
             ft.Row([campo_visao, campo_revelacao, campo_sonho], wrap=True),
             campo_dom,
@@ -479,6 +527,9 @@ class EventoDomView:
             f"{igreja_nome} | {self._resumo_classificacao(item)} | "
             f"Entregue por: {entregue_por}"
         )
+        if self.com_visita_lar:
+            visita_lar_de = (item.get("visita_lar_de") or "—").strip() or "—"
+            subtitulo = f"Visita no lar de: {visita_lar_de} | {subtitulo}"
         if resumo_dom:
             subtitulo = f"{resumo_dom[:40]} | {subtitulo}"
 

@@ -43,7 +43,7 @@ def caminho_e_referencia(page: ft.Page, nome_arquivo: str) -> tuple[str, str]:
 async def abrir_arquivo(page: ft.Page, referencia: str) -> None:
     """Abre um arquivo gerado por `caminho_e_referencia`."""
     if page.web:
-        await page.launch_url(referencia)
+        await ft.UrlLauncher().launch_url(referencia)
     else:
         await ft.Share().share_files(
             [ft.ShareFile.from_path(referencia, name=os.path.basename(referencia))]

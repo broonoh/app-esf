@@ -114,7 +114,10 @@ class AssistidosView:
                 self.page.update()
 
         date_picker = ft.DatePicker(on_change=_data_selecionada)
-        time_picker = ft.TimePicker(on_change=_hora_selecionada)
+        time_picker = ft.TimePicker(
+            on_change=_hora_selecionada,
+            entry_mode=ft.TimePickerEntryMode.INPUT_ONLY,
+        )
 
         linha = ft.Column(
             [
@@ -139,7 +142,7 @@ class AssistidosView:
                     ]
                 ),
             ],
-            spacing=0,
+            spacing=12,
         )
         return linha, campo_data, campo_hora
 
@@ -234,8 +237,11 @@ class AssistidosView:
         )
 
         async def _copiar(e):
-            await self.page.clipboard.set(msg)
-            self.snack("Mensagem copiada!")
+            try:
+                await ft.Clipboard().set(msg)
+                self.snack("Mensagem copiada!")
+            except Exception as ex:
+                self.snack(f"Não foi possível copiar: {ex}")
 
         largura_dialogo = min(420, (self.page.width or 420) - 80)
         dialog = ft.AlertDialog(
@@ -351,10 +357,22 @@ class AssistidosView:
     # ========================================================
     # RENDER
     # ========================================================
+    def _ids_pessoas_indisponiveis(self) -> set:
+        """Pessoas que já recusaram, já têm visita agendada ou já tiveram
+        visita realizada não ficam disponíveis para um novo agendamento."""
+        return {
+            a["pessoa_id"]
+            for a in self.state.assistidos
+            if a.get("status") == "Recusou"
+            or a.get("novo_status") in ("Visita Agendada", "Visita Realizada")
+        }
+
     def render(self):
+        indisponiveis = self._ids_pessoas_indisponiveis()
         self.nova_pessoa.options = [
             ft.dropdown.Option(key=str(p["id"]), text=p["nome"])
             for p in self.state.pessoas
+            if p["id"] not in indisponiveis
         ]
         self.filtro_grupo.options = [ft.dropdown.Option("Todos")] + [
             ft.dropdown.Option(g["grupo"]) for g in self.state.grupos

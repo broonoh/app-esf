@@ -163,9 +163,13 @@ class GerarMsgView:
             self.page.update()
 
         async def _copiar(e):
-            if campo_texto.value:
-                await self.page.clipboard.set(campo_texto.value)
+            if not campo_texto.value:
+                return
+            try:
+                await ft.Clipboard().set(campo_texto.value)
                 self.snack("Mensagem copiada!")
+            except Exception as ex:
+                self.snack(f"Não foi possível copiar: {ex}")
 
         def _salvar(e):
             if not campo_pessoa.value:

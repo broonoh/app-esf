@@ -19,19 +19,18 @@ def gerar_mensagem(pessoa: dict, igreja: str) -> str:
 
     msg = f"Olá, {nome}! A Paz do Senhor Jesus!\n\n"
     msg += f"Aqui é {responsavel}, da {igreja}. Realizamos uma evangelização de rua "
-    msg += "e tivemos a alegria de orar por você. Ficamos muito felizes com essa oportunidade de levarmos até você uma mensagem de Deus para sua vida!\n\n"
+    msg += "e tivemos a alegria de orar por você. Ficamos muito felizes em compartilhar esta mensagem de Deus com você!\n\n"
 
     if dom:
         msg += f"Durante a oração, Deus revelou um dom espiritual para sua vida: *{dom}*. "
         msg += (
-            "Este dom foi uma experiência concedida por Deus para a sua vida. "
-            "Não deixe para depois a oportunidade de permitir que Deus continue "
-            "a se revelar para você. \n\n"
+            "Este dom foi uma experiência de Deus para a sua vida. "
+            "Permita que Ele continue se revelando a você! \n\n"
         )
 
     msg += ("Gostaríamos de saber se você aceita receber uma visita de alguns membros da nossa igreja em sua casa? "
-            "Seria um momento simples e edificante: cantaremos alguns louvores e traremos uma breve palavra.\n\n")
-    msg += ("Você não precisa se preocupar em fazer nada para receber nossos irmãos. Lembrando que será um número pequeno de irmãos, no máximo cinco pessoas. "
+            "Será um momento edificante: onde cantaremos alguns louvores e traremos uma breve palavra.\n\n")
+    msg += ("Você não precisa se preocupar em fazer nada para receber nossos irmãos."
             "Será uma bênção para nós!\n\n")
     msg += "Podemos agendar? Qual o melhor dia e horário para você?\n\nDeus abençoe!"
     return msg
@@ -87,7 +86,7 @@ def gerar_mensagem_programacao_cultos(nome: str) -> str:
     Retorna: string pronta para copiar/enviar.
     """
     return (
-        f"Olá, {nome}! Que alegria ter estado com você! \n\n"
+        f"Olá, {nome}! A Paz do Senhor Jesus, que alegria ter estado com você! \n\n"
         f"Ficamos muito felizes com a visita e queremos te convidar para conhecer "
         f"mais de perto a nossa igreja. Segue nossa programação de cultos:\n\n"
         f"Segunda-feira: 19h30\n"

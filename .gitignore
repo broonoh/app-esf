@@ -1,0 +1,13 @@
+# Bytecode Python
+__pycache__/
+*.pyc
+
+# Backups do banco de dados gerados pelo app (manual ou automatico diario)
+backup_evangelizacao_*.db
+*.db.last_backup
+
+# Relatorios em PDF gerados pelo app durante o uso/testes
+relatorio_*.pdf
+
+# Armazenamento local do Flet (execucao em desktop/dev)
+.flet/storage/

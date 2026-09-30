@@ -292,7 +292,7 @@ class PessoasView:
     # ========================================================
     async def _baixar_modelo(self, e):
         if self.page.web:
-            await self.page.launch_url(MODELO_XLSX_URL)
+            await ft.UrlLauncher().launch_url(MODELO_XLSX_URL)
             return
         # No app nativo não há servidor web para baixar a URL — lemos o
         # modelo empacotado com o app e oferecemos a folha de "Salvar como"

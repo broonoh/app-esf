@@ -168,6 +168,48 @@ def gerar_pdf_agendadas(assistidos: list, caminho_saida: str) -> str:
     return caminho_saida
 
 
+def gerar_pdf_canceladas(assistidos: list, caminho_saida: str) -> str:
+    """Relatório de visitas canceladas (novo_status == 'Visita Cancelada')."""
+    itens = [a for a in assistidos if a.get("novo_status") == "Visita Cancelada"]
+
+    pdf = _RelatorioPDF(orientation="L", unit="mm", format="A4")
+    pdf.titulo_relatorio = "Visitas Canceladas"
+    pdf.subtitulo_relatorio = "Relatório de evangelização — assistidos com visita cancelada"
+    pdf.add_page()
+
+    _cartao_resumo(pdf, [
+        ("Total canceladas", str(len(itens))),
+        ("Grupos envolvidos", str(len({a.get("grupo") for a in itens if a.get("grupo")}))),
+        ("Igrejas envolvidas", str(len({a.get("igreja_nome") for a in itens if a.get("igreja_nome")}))),
+    ])
+
+    colunas = [
+        ("Nome", 45), ("Telefone", 28), ("Igreja", 38),
+        ("Grupo", 16), ("Responsável", 32), ("Motivo do Cancelamento", 68),
+    ]
+    linhas = [
+        [
+            a.get("nome", "") or "",
+            a.get("telefone", "") or "",
+            a.get("igreja_nome", "") or "",
+            a.get("grupo", "") or "—",
+            a.get("responsavel", "") or "—",
+            a.get("observacao_cancelamento", "") or "—",
+        ]
+        for a in itens
+    ]
+
+    if not linhas:
+        pdf.set_font("Helvetica", "I", 11)
+        pdf.set_text_color(*TEXT_MUTED)
+        pdf.cell(0, 10, "Nenhuma visita cancelada registrada.", align="C")
+    else:
+        _tabela(pdf, colunas, linhas)
+
+    pdf.output(caminho_saida)
+    return caminho_saida
+
+
 def gerar_pdf_realizadas(visitas_realizadas: list, caminho_saida: str) -> str:
     """Relatório histórico de visitas realizadas (registro permanente)."""
     pdf = _RelatorioPDF(orientation="L", unit="mm", format="A4")

@@ -1,5 +1,6 @@
 """Pacote de views — reexporta as classes para import direto."""
 
+from views.ajuda import AjudaView
 from views.assistidos import AssistidosView
 from views.estatisticas import EstatisticasView
 from views.gerar_msg import GerarMsgView
@@ -10,6 +11,7 @@ from views.pdf import PdfView
 from views.pessoas import PessoasView
 
 __all__ = [
+    "AjudaView",
     "AssistidosView",
     "EstatisticasView",
     "GerarMsgView",

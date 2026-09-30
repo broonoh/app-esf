@@ -6,10 +6,16 @@ from datetime import datetime
 import flet as ft
 
 from arquivos import abrir_arquivo, caminho_e_referencia
+from backup import gerar_backup
 from components import titulo_secao
 from const import CATEGORIAS_DOM
 from db import listar_todos_eventos_dom, listar_todos_eventos_quantitativo
-from pdf_gen import gerar_pdf_agendadas, gerar_pdf_eventos_dom, gerar_pdf_realizadas
+from pdf_gen import (
+    gerar_pdf_agendadas,
+    gerar_pdf_canceladas,
+    gerar_pdf_eventos_dom,
+    gerar_pdf_realizadas,
+)
 
 _CAMPOS_QUANTITATIVO = ["varoes", "senhoras", "jovens", "criancas"]
 _ROTULOS_QUANTITATIVO = {
@@ -39,6 +45,15 @@ class PdfView:
         self.state = state
         self.snack = snack
 
+        self._ultimo_backup: str | None = None
+        self.label_backup = ft.Text("Nenhum backup gerado ainda.", italic=True)
+        self.btn_abrir_backup = ft.OutlinedButton(
+            "📂 Salvar/Compartilhar Backup",
+            on_click=self._abrir_backup,
+            disabled=True,
+            expand=True,
+        )
+
         self.label_agendadas = ft.Text("Nenhum PDF gerado ainda.", italic=True)
         self.label_realizadas = ft.Text("Nenhum PDF gerado ainda.", italic=True)
 
@@ -51,6 +66,15 @@ class PdfView:
         self.btn_abrir_realizadas = ft.OutlinedButton(
             "📂 Abrir PDF de Visitas Realizadas",
             on_click=self._abrir_realizadas,
+            disabled=True,
+            expand=True,
+        )
+
+        self._ultimo_pdf_canceladas: str | None = None
+        self.label_canceladas = ft.Text("Nenhum PDF gerado ainda.", italic=True)
+        self.btn_abrir_canceladas = ft.OutlinedButton(
+            "📂 Abrir PDF de Visitas Canceladas",
+            on_click=self._abrir_canceladas,
             disabled=True,
             expand=True,
         )
@@ -74,6 +98,33 @@ class PdfView:
                         italic=True,
                         size=12,
                     ),
+                    ft.Divider(),
+                    ft.Text(
+                        "💾 Backup do Banco de Dados", weight=ft.FontWeight.BOLD, size=16
+                    ),
+                    ft.Text(
+                        "Gera uma cópia de TODOS os dados cadastrados (igrejas, "
+                        "assistidos, agendamentos, doms, mensagens). Se o aparelho "
+                        "for perdido ou extraviado, esse backup é o que garante que "
+                        "as informações não se percam — ao salvar, escolha uma opção "
+                        "que não dependa deste celular, como o Google Drive ou "
+                        "enviar por e-mail. O app também gera esse backup "
+                        "automaticamente uma vez por dia ao abrir, já mostrando "
+                        "essa mesma tela de salvar.",
+                        italic=True,
+                        size=12,
+                    ),
+                    ft.Row(
+                        [
+                            ft.Button(
+                                "💾 Gerar Backup do Banco de Dados",
+                                on_click=self._gerar_backup,
+                                expand=True,
+                            )
+                        ]
+                    ),
+                    self.label_backup,
+                    ft.Row([self.btn_abrir_backup]),
                     ft.Divider(),
                     ft.Text("📅 Visitas Agendadas", weight=ft.FontWeight.BOLD, size=16),
                     ft.Row(
@@ -100,6 +151,19 @@ class PdfView:
                     ),
                     self.label_realizadas,
                     ft.Row([self.btn_abrir_realizadas]),
+                    ft.Divider(),
+                    ft.Text("❌ Visitas Canceladas", weight=ft.FontWeight.BOLD, size=16),
+                    ft.Row(
+                        [
+                            ft.Button(
+                                "📄 Gerar PDF de Visitas Canceladas",
+                                on_click=self._gerar_canceladas,
+                                expand=True,
+                            )
+                        ]
+                    ),
+                    self.label_canceladas,
+                    ft.Row([self.btn_abrir_canceladas]),
                     ft.Divider(),
                     ft.Text(
                         "📖 Todos os Dons Cadastrados", weight=ft.FontWeight.BOLD, size=16
@@ -146,8 +210,32 @@ class PdfView:
         nome = f"relatorio_{sufixo}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
         return caminho_e_referencia(self.page, nome)
 
+    def _gerar_backup(self, e):
+        try:
+            referencia = gerar_backup(self.page)
+            self._ultimo_backup = referencia
+            self.label_backup.value = (
+                "✅ Backup gerado! Clique abaixo e escolha o Google Drive (ou "
+                "outro destino fora do aparelho) para salvar."
+            )
+            self.btn_abrir_backup.disabled = False
+            self.snack("Backup do banco de dados gerado!")
+            self.page.update()
+        except Exception as ex:
+            self.snack(f"Erro: {ex}")
+
+    async def _abrir_backup(self, e):
+        if not self._ultimo_backup:
+            self.snack("Gere o backup primeiro!")
+            return
+        try:
+            await abrir_arquivo(self.page, self._ultimo_backup)
+        except Exception as ex:
+            self.snack(f"Não foi possível abrir: {ex}")
+
     def _gerar_agendadas(self, e):
         try:
+            self.state.recarregar()
             caminho_disco, referencia = self._gerar_arquivo("agendadas")
             gerar_pdf_agendadas(self.state.assistidos, caminho_disco)
             self.state.ultimo_pdf = referencia
@@ -160,6 +248,7 @@ class PdfView:
 
     def _gerar_realizadas(self, e):
         try:
+            self.state.recarregar()
             caminho_disco, referencia = self._gerar_arquivo("realizadas")
             gerar_pdf_realizadas(self.state.visitas_realizadas, caminho_disco)
             self.state.ultimo_pdf_realizadas = referencia
@@ -170,8 +259,22 @@ class PdfView:
         except Exception as ex:
             self.snack(f"Erro: {ex}")
 
+    def _gerar_canceladas(self, e):
+        try:
+            self.state.recarregar()
+            caminho_disco, referencia = self._gerar_arquivo("canceladas")
+            gerar_pdf_canceladas(self.state.assistidos, caminho_disco)
+            self._ultimo_pdf_canceladas = referencia
+            self.label_canceladas.value = "✅ PDF gerado! Clique abaixo para abrir."
+            self.btn_abrir_canceladas.disabled = False
+            self.snack("PDF de visitas canceladas gerado!")
+            self.page.update()
+        except Exception as ex:
+            self.snack(f"Erro: {ex}")
+
     def _gerar_dons(self, e):
         try:
+            self.state.recarregar()
             itens_dom = listar_todos_eventos_dom()
             for item in itens_dom:
                 item["_classificacao"] = _resumo_classificacao(item)
@@ -243,7 +346,7 @@ class PdfView:
                 f"❌ Visitas canceladas: {canceladas}\n\n"
                 f"Gerado em {datetime.now().strftime('%d/%m/%Y %H:%M')}"
             )
-            await self.page.launch_url(
+            await ft.UrlLauncher().launch_url(
                 f"https://wa.me/?text={urllib.parse.quote(resumo)}"
             )
             self.snack("Abrindo WhatsApp...")
@@ -255,6 +358,9 @@ class PdfView:
 
     async def _abrir_realizadas(self, e):
         await self._abrir_pdf(self.state.ultimo_pdf_realizadas)
+
+    async def _abrir_canceladas(self, e):
+        await self._abrir_pdf(self._ultimo_pdf_canceladas)
 
     async def _abrir_pdf(self, referencia: str | None):
         if not referencia:

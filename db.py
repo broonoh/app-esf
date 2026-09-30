@@ -116,6 +116,7 @@ def init_db():
             sonho INTEGER DEFAULT 0,
             entregue_por TEXT DEFAULT '',
             grupo_servos TEXT DEFAULT '',
+            visita_lar_de TEXT DEFAULT '',
             data_registro TEXT DEFAULT (datetime('now', 'localtime')),
             FOREIGN KEY (igreja_id) REFERENCES igrejas(id) ON DELETE SET NULL
         );
@@ -236,6 +237,10 @@ def init_db():
         if colunas_eventos_dom and "entregue_por" not in colunas_eventos_dom:
             conn.execute(
                 "ALTER TABLE eventos_dom ADD COLUMN entregue_por TEXT DEFAULT ''"
+            )
+        if colunas_eventos_dom and "visita_lar_de" not in colunas_eventos_dom:
+            conn.execute(
+                "ALTER TABLE eventos_dom ADD COLUMN visita_lar_de TEXT DEFAULT ''"
             )
         conn.commit()
 
