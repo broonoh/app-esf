@@ -1,29 +1,12 @@
-# Python
 __pycache__/
 *.pyc
-*.pyo
 .venv/
 venv/
-env/
-*.egg-info/
-.pytest_cache/
-
-# IDE
-.idea/
-.vscode/
-
-# Segredos
-.env
-*.env
-
-# Dados / logs
-Logs/
-log/
-data/
-relatorios/
-chrome_profile/
-
-# Backups
-*.zip
-*.tar.gz
-*.bak
+*.db
+*.sqlite
+relatorio_*.pdf
+visitados.json
+build/
+dist/
+*.apk
+*.aab
