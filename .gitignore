@@ -1,13 +1,29 @@
-# Bytecode Python
+# Python
 __pycache__/
 *.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
 
-# Backups do banco de dados gerados pelo app (manual ou automatico diario)
-backup_evangelizacao_*.db
-*.db.last_backup
+# IDE
+.idea/
+.vscode/
 
-# Relatorios em PDF gerados pelo app durante o uso/testes
-relatorio_*.pdf
+# Segredos
+.env
+*.env
 
-# Armazenamento local do Flet (execucao em desktop/dev)
-.flet/storage/
+# Dados / logs
+Logs/
+log/
+data/
+relatorios/
+chrome_profile/
+
+# Backups
+*.zip
+*.tar.gz
+*.bak

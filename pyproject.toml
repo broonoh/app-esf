@@ -1,0 +1,60 @@
+[project]
+name = "evangelizacao"
+version = "1.0.0"
+description = "App de gestão de assistidos da evangelização de rua"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Sua Igreja", email = "contato@suaigreja.com" }
+]
+dependencies = [
+    "flet>=0.86.0",
+    "fpdf2>=2.7.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=5.0.0",
+]
+
+[build-system]
+requires = ["flet>=0.86.0"]
+build-backend = "flet.build"
+
+[tool.flet]
+org = "com.suaigreja"
+product = "Cadastro ESF"
+company = "Sua Igreja"
+copyright = "Copyright (C) 2025 Sua Igreja"
+
+# Caminho do código-fonte do app
+[tool.flet.app]
+path = "src"
+
+# Ícone do app (precisa existir em assets/)
+[tool.flet.app.icon]
+light = "assets/esf.png"
+dark = "assets/esf.png"
+
+# Splash screen (opcional — comente se não quiser)
+[tool.flet.splash]
+color = "#1E88E5"
+dark_color = "#0D47A1"
+image = "assets/esf.png"
+
+# Configuração Android
+[tool.flet.android]
+package = "com.suaigreja.evangelizacao"
+adaptive_icon_background = "#0A1F44"
+adaptive_icon_foreground = "assets/esf.png"
+permissions = [
+    "android.permission.INTERNET",           # para abrir wa.me
+    "android.permission.READ_EXTERNAL_STORAGE",
+    "android.permission.WRITE_EXTERNAL_STORAGE",
+]
+
+# Configuração de build
+[tool.flet.build]
+compile_app_packages = true
